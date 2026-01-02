@@ -132,7 +132,7 @@ function App() {
 
   const fetchDatasets = async () => {
     try {
-      const res = await fetch('/api/datasets?prefix=plt')
+      const res = await fetch('/api/datasets')
       const data = await res.json()
       setDatasets(data.datasets || [])
     } catch (err) {
@@ -227,20 +227,22 @@ function App() {
     if (!dataDir.trim()) return
     
     try {
-      const res = await fetch('/api/set_data_dir', {
+      const res = await fetch('/api/set_data_pattern', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: dataDir })
+        body: JSON.stringify({ pattern: dataDir })
       })
       
       if (res.ok) {
+        const data = await res.json()
+        console.log(`Found ${data.num_datasets} datasets`)
         fetchDatasets()
       } else {
         const err = await res.json()
-        setError(err.detail || 'Failed to set data directory')
+        setError(err.detail || 'No datasets found matching pattern')
       }
     } catch (err) {
-      setError('Failed to set data directory')
+      setError('Failed to load datasets')
     }
   }
 
@@ -305,19 +307,19 @@ function App() {
         </div>
 
         <div className="sidebar-content">
-          {/* Data Directory */}
-          <Section title="Data Directory" defaultOpen={false}>
+          {/* Data Pattern */}
+          <Section title="Data Pattern" defaultOpen={false}>
             <div className="control-row">
               <input
                 type="text"
                 value={dataDir}
                 onChange={e => setDataDir(e.target.value)}
-                placeholder="/path/to/data"
+                placeholder="~/data/plt* or /path/to/data"
                 onKeyDown={e => e.key === 'Enter' && handleSetDataDir()}
               />
             </div>
             <button className="full-width secondary" onClick={handleSetDataDir}>
-              Set Directory
+              Load Datasets
             </button>
           </Section>
 

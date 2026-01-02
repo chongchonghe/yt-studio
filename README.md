@@ -140,7 +140,7 @@ plotter.slice("z", "density", params=params, output="custom_slice.png")
 
 ### Web Interface
 
-1. **Set Data Directory** - Click "DATA DIRECTORY" section and enter the path to your simulation outputs
+1. **Set Data Pattern** - Click "DATA PATTERN" section and enter a glob pattern like `~/data/plt*` or `/path/to/simulations/plt*`
 2. **Select Dataset** - Use the dropdown at the bottom to choose a timestep
 3. **Choose Plot Type** - Click Slice, Project, or 3D
 4. **Select Field** - Choose from density, temperature, velocity, etc.

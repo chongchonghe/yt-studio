@@ -9,6 +9,7 @@ import os
 import sys
 import socket
 import logging
+import glob
 
 # Add parent directory to path for plot_quokka module
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -59,7 +60,9 @@ app.add_middleware(
 )
 
 # Global state
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "data")
+DATA_PATTERN = ""  # Glob pattern like ~/data/plt*
+DATA_DIR = ""  # Base directory extracted from pattern
+matched_datasets: List[str] = []  # Full paths to matched datasets
 current_plotter: Optional[QuokkaPlotter] = None
 current_dataset_name: Optional[str] = None
 
@@ -67,8 +70,8 @@ current_dataset_name: Optional[str] = None
 config = PlotConfig()
 
 
-class DataDirRequest(BaseModel):
-    path: str
+class DataPatternRequest(BaseModel):
+    pattern: str
 
 
 class PlotRequest(BaseModel):
@@ -124,8 +127,9 @@ def read_root():
         "name": "QUOKKA Visualization API",
         "version": "2.0.0",
         "hostname": hostname,
-        "data_directory": DATA_DIR,
-        "current_dataset": current_dataset_name
+        "data_pattern": DATA_PATTERN,
+        "current_dataset": current_dataset_name,
+        "num_datasets": len(matched_datasets)
     }
 
 
@@ -135,57 +139,85 @@ def get_server_info():
     hostname = socket.gethostname()
     return {
         "hostname": hostname,
-        "current_data_directory": DATA_DIR,
-        "data_dir_exists": os.path.exists(DATA_DIR),
+        "current_data_pattern": DATA_PATTERN,
+        "num_datasets": len(matched_datasets),
         "current_dataset": current_dataset_name,
         "python_version": sys.version.split()[0]
     }
 
 
-@app.post("/api/set_data_dir")
-def set_data_dir(request: DataDirRequest):
-    """Set the data directory."""
-    global DATA_DIR, current_plotter, current_dataset_name
+@app.post("/api/set_data_pattern")
+def set_data_pattern(request: DataPatternRequest):
+    """Set the data pattern (glob pattern like ~/data/plt*)."""
+    global DATA_PATTERN, DATA_DIR, matched_datasets, current_plotter, current_dataset_name
     
-    path = request.path
+    pattern = request.pattern.strip()
     
-    # Validate path
-    if not os.path.isabs(path):
-        path = os.path.abspath(path)
+    # Expand ~ to home directory
+    pattern = os.path.expanduser(pattern)
     
-    if not os.path.exists(path):
+    # If pattern doesn't contain wildcards, treat as directory
+    if '*' not in pattern and '?' not in pattern:
+        # It's a plain directory path
+        if os.path.isdir(pattern):
+            # Add wildcard to match plt* inside
+            pattern = os.path.join(pattern, "plt*")
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Path not found: {pattern}"
+            )
+    
+    # Find matching paths
+    matches = glob.glob(pattern)
+    
+    # Filter to only directories (datasets)
+    matches = [m for m in matches if os.path.isdir(m)]
+    matches.sort()
+    
+    if not matches:
         raise HTTPException(
-            status_code=404, 
-            detail=f"Directory not found: {path}"
+            status_code=404,
+            detail=f"No datasets found matching pattern: {pattern}"
         )
     
-    if not os.path.isdir(path):
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Path is not a directory: {path}"
-        )
-    
-    DATA_DIR = path
+    DATA_PATTERN = request.pattern.strip()
+    matched_datasets = matches
     current_plotter = None
     current_dataset_name = None
     
+    # Extract base directory for display
+    DATA_DIR = os.path.dirname(matches[0]) if matches else ""
+    
     return {
-        "message": f"Data directory set to: {DATA_DIR}",
-        "path": DATA_DIR
+        "message": f"Found {len(matches)} datasets",
+        "pattern": DATA_PATTERN,
+        "num_datasets": len(matches),
+        "datasets": [os.path.basename(m) for m in matches[:10]],  # First 10 for preview
+        "has_more": len(matches) > 10
     }
 
 
+# Keep old endpoint for backward compatibility
+@app.post("/api/set_data_dir")
+def set_data_dir(request: DataPatternRequest):
+    """Backward compatible endpoint - redirects to set_data_pattern."""
+    return set_data_pattern(request)
+
+
 @app.get("/api/datasets")
-def get_datasets(prefix: str = "plt"):
-    """List available datasets."""
-    if not os.path.exists(DATA_DIR):
+def get_datasets(prefix: str = ""):
+    """List available datasets matching the current pattern."""
+    if not matched_datasets:
         return {"datasets": []}
     
-    datasets = [
-        d for d in os.listdir(DATA_DIR) 
-        if d.startswith(prefix) and os.path.isdir(os.path.join(DATA_DIR, d))
-    ]
-    datasets.sort()
+    # Return basenames of matched datasets
+    datasets = [os.path.basename(d) for d in matched_datasets]
+    
+    # Filter by prefix if provided
+    if prefix:
+        datasets = [d for d in datasets if d.startswith(prefix)]
+    
     return {"datasets": datasets}
 
 
@@ -194,12 +226,23 @@ def load_dataset(filename: str = "plt00000"):
     """Load a dataset."""
     global current_plotter, current_dataset_name
     
-    path = os.path.join(DATA_DIR, filename)
+    # Find the full path from matched_datasets
+    path = None
+    for dataset_path in matched_datasets:
+        if os.path.basename(dataset_path) == filename:
+            path = dataset_path
+            break
     
-    if not os.path.exists(path):
+    # Fallback: try DATA_DIR if no match found
+    if path is None and DATA_DIR:
+        fallback_path = os.path.join(DATA_DIR, filename)
+        if os.path.exists(fallback_path):
+            path = fallback_path
+    
+    if path is None or not os.path.exists(path):
         raise HTTPException(
             status_code=404, 
-            detail=f"Dataset not found: {path}"
+            detail=f"Dataset not found: {filename}"
         )
     
     try:
@@ -208,6 +251,7 @@ def load_dataset(filename: str = "plt00000"):
         
         return {
             "message": f"Dataset loaded: {filename}",
+            "path": path,
             "domain_dimensions": current_plotter.dataset.domain_dimensions.tolist(),
             "current_time": str(current_plotter.dataset.current_time),
             "max_level": current_plotter.dataset.max_level
