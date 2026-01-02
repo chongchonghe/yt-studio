@@ -69,9 +69,26 @@ cd ..
 
 ## Quick Start
 
-### Option 1: Web Interface
+### Option 1: Web Interface (Easy - One Command)
 
-You need to start **both** the backend and frontend servers:
+Use the included start script to launch both servers:
+
+```bash
+cd quokka-vis-tool-v2
+./start.sh
+```
+
+This will:
+- Activate the virtual environment (if found)
+- Start the backend on http://localhost:9010
+- Start the frontend on http://localhost:5173
+- Handle cleanup when you press `Ctrl+C`
+
+**Open your browser to http://localhost:5173**
+
+### Option 2: Web Interface (Manual - Two Terminals)
+
+If you prefer to run servers separately:
 
 #### Terminal 1 - Start Backend
 ```bash
