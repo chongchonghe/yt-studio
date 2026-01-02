@@ -70,11 +70,25 @@ function App() {
   const [cameraPhi, setCameraPhi] = useState(45)
   const [preview, setPreview] = useState(true)
 
-  // Fetch server info on mount
+  // Particles
+  const [particleTypes, setParticleTypes] = useState([])
+  const [selectedParticles, setSelectedParticles] = useState([])
+  const [particleSize, setParticleSize] = useState(10)
+  const [particleColor, setParticleColor] = useState('red')
+
+  // Fetch server info and particle types on mount
   useEffect(() => {
     fetch('/api/server_info')
       .then(res => res.json())
       .then(setServerInfo)
+      .catch(console.error)
+    
+    fetch('/api/particle_types')
+      .then(res => res.json())
+      .then(data => {
+        setParticleTypes(data.particle_types || [])
+        setParticleSize(data.default_particle_size || 10)
+      })
       .catch(console.error)
   }, [])
 
@@ -112,6 +126,7 @@ function App() {
     field, axis, plotType, weightField, cmap, logScale, 
     showColorbar, showScaleBar, showGrids, showTimestamp,
     widthValue, widthUnit, cameraTheta, cameraPhi, preview,
+    selectedParticles, particleSize, particleColor,
     refreshKey
   ])
 
@@ -181,6 +196,11 @@ function App() {
       if (vmax) params.set('vmax', vmax)
       if (widthValue) params.set('width_value', widthValue)
       if (widthUnit) params.set('width_unit', widthUnit)
+      if (selectedParticles.length > 0) {
+        params.set('particles', selectedParticles.join(','))
+        params.set('particle_size', particleSize)
+        params.set('particle_color', particleColor)
+      }
       if (plotType === 'vol') {
         params.set('camera_theta', cameraTheta)
         params.set('camera_phi', cameraPhi)
@@ -200,7 +220,8 @@ function App() {
     }
   }, [field, axis, plotType, weightField, cmap, logScale, vmin, vmax, 
       showColorbar, showScaleBar, showGrids, showTimestamp, 
-      widthValue, widthUnit, cameraTheta, cameraPhi, preview, refreshKey])
+      widthValue, widthUnit, cameraTheta, cameraPhi, preview,
+      selectedParticles, particleSize, particleColor, refreshKey])
 
   const handleSetDataDir = async () => {
     if (!dataDir.trim()) return
@@ -246,6 +267,11 @@ function App() {
       
       if (vmin) params.set('vmin', vmin)
       if (vmax) params.set('vmax', vmax)
+      if (selectedParticles.length > 0) {
+        params.set('particles', selectedParticles.join(','))
+        params.set('particle_size', particleSize)
+        params.set('particle_color', particleColor)
+      }
       
       const res = await fetch(`/api/export/current_frame?${params}`)
       if (!res.ok) throw new Error('Export failed')
@@ -495,6 +521,65 @@ function App() {
                 style={{ width: '60px' }}
               />
             </div>
+          </Section>
+
+          {/* Particles */}
+          <Section title={`Particles${selectedParticles.length > 0 ? ` (${selectedParticles.length})` : ''}`} defaultOpen={false}>
+            {particleTypes.length > 0 ? (
+              <>
+                <div style={{ marginBottom: '0.75rem' }}>
+                  {particleTypes.map(ptype => (
+                    <label key={ptype} className="checkbox-row">
+                      <input
+                        type="checkbox"
+                        checked={selectedParticles.includes(ptype)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setSelectedParticles([...selectedParticles, ptype])
+                          } else {
+                            setSelectedParticles(selectedParticles.filter(p => p !== ptype))
+                          }
+                        }}
+                      />
+                      <span>{ptype.replace('_particles', '')}</span>
+                    </label>
+                  ))}
+                </div>
+                
+                {selectedParticles.length > 0 && (
+                  <>
+                    <div className="control-row">
+                      <span className="control-label">Size</span>
+                      <input
+                        type="number"
+                        className="control-input"
+                        value={particleSize}
+                        onChange={e => setParticleSize(Number(e.target.value))}
+                        min="1"
+                        max="50"
+                      />
+                    </div>
+                    
+                    <div className="control-row">
+                      <span className="control-label">Color</span>
+                      <select
+                        className="control-input"
+                        value={particleColor}
+                        onChange={e => setParticleColor(e.target.value)}
+                      >
+                        {['red', 'white', 'black', 'yellow', 'cyan', 'magenta', 'lime', 'orange'].map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+                No particle types available
+              </div>
+            )}
           </Section>
 
           {/* Actions */}
