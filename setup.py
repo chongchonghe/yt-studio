@@ -53,7 +53,7 @@ setup(
     
     # Dependencies
     install_requires=[
-        "yt>=4.0.0",
+        "yt @ git+https://github.com/chongchonghe/yt.git",
         "unyt>=2.9.0",
         "numpy>=1.20.0",
         "matplotlib>=3.5.0",

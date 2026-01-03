@@ -181,17 +181,16 @@ Examples:
         python_path = f"{python_path}:{env['PYTHONPATH']}"
     env['PYTHONPATH'] = python_path
     
-    # Run uvicorn directly with the module path
+    # Pass port/host via environment variables
+    env['YT_STUDIO_HOST'] = args.host
+    env['YT_STUDIO_PORT'] = str(args.backend_port)
+    
+    # Run backend the same way start.sh does: cd backend && python main.py
+    # This is more reliable than running uvicorn as a module
     backend_proc = subprocess.Popen(
-        [
-            sys.executable, '-m', 'uvicorn',
-            'backend.main:app',
-            '--host', args.host,
-            '--port', str(args.backend_port),
-            '--log-level', 'warning'
-        ],
+        [sys.executable, 'main.py'],
         env=env,
-        cwd=package_dir
+        cwd=backend_dir
     )
     processes.append(backend_proc)
     

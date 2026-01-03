@@ -45,6 +45,12 @@ yt-studio --frontend-port 3000   # Custom frontend port
 yt-studio --backend-only         # API server only (no frontend)
 ```
 
+**Environment Variables:**
+```bash
+YT_STUDIO_HOST=0.0.0.0    # Host to bind backend (default: 0.0.0.0)
+YT_STUDIO_PORT=9010       # Backend port (default: 9010)
+```
+
 ### Python API
 
 ```python

@@ -458,4 +458,6 @@ def export_current_frame(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=9010)
+    host = os.environ.get("YT_STUDIO_HOST", "0.0.0.0")
+    port = int(os.environ.get("YT_STUDIO_PORT", "9010"))
+    uvicorn.run(app, host=host, port=port)
