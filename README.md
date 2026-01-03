@@ -51,6 +51,29 @@ YT_STUDIO_HOST=0.0.0.0    # Host to bind backend (default: 0.0.0.0)
 YT_STUDIO_PORT=9010       # Backend port (default: 9010)
 ```
 
+### Running on a Server with SSH Tunnel
+
+To run the app on a remote server and access it from your local computer:
+
+1. **On the server**, start the application:
+   ```bash
+   yt-studio
+   ```
+   The backend will run on port 9010 and frontend on port 5173 (or your custom ports).
+
+2. **On your local computer**, create SSH tunnels for both ports:
+   ```bash
+   ssh -L 5173:localhost:5173 -L 9010:localhost:9010 user@server
+   ```
+   Replace `user@server` with your SSH credentials.
+
+3. **Open your browser** and navigate to:
+   ```
+   http://localhost:5173
+   ```
+
+The SSH tunnel forwards traffic from your local ports to the server, allowing you to access the web interface as if it were running locally.
+
 ### Python API
 
 ```python
