@@ -28,7 +28,7 @@ setup(
     license="MIT",
     
     # Packages to include
-    packages=find_packages(include=["plot_quokka", "plot_quokka.*", "yt_studio", "yt_studio.*"]),
+    packages=find_packages(include=["plot_quokka", "plot_quokka.*", "yt_studio", "yt_studio.*", "backend"]),
     
     # Include backend and frontend as package data
     package_data={

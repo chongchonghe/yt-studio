@@ -13,6 +13,7 @@ import subprocess
 import time
 import argparse
 import shutil
+import socket
 from pathlib import Path
 
 
@@ -42,6 +43,31 @@ def print_banner():
 def check_node_installed() -> bool:
     """Check if Node.js is installed."""
     return shutil.which('node') is not None and shutil.which('npm') is not None
+
+
+def is_port_open(host: str, port: int, timeout: float = 1.0) -> bool:
+    """Check if a port is open and accepting connections."""
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(timeout)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except socket.error:
+        return False
+
+
+def wait_for_server(host: str, port: int, timeout: int = 30, process=None) -> bool:
+    """Wait for a server to start accepting connections."""
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        # Check if process died
+        if process and process.poll() is not None:
+            return False
+        if is_port_open(host, port):
+            return True
+        time.sleep(0.5)
+    return False
 
 
 def install_frontend_deps(frontend_dir: Path) -> bool:
@@ -155,28 +181,25 @@ Examples:
         python_path = f"{python_path}:{env['PYTHONPATH']}"
     env['PYTHONPATH'] = python_path
     
+    # Run uvicorn directly with the module path
     backend_proc = subprocess.Popen(
         [
-            sys.executable, '-c',
-            f'''
-import sys
-sys.path.insert(0, "{package_dir}")
-import uvicorn
-from backend.main import app
-uvicorn.run(app, host="{args.host}", port={args.backend_port}, log_level="warning")
-'''
+            sys.executable, '-m', 'uvicorn',
+            'backend.main:app',
+            '--host', args.host,
+            '--port', str(args.backend_port),
+            '--log-level', 'warning'
         ],
         env=env,
         cwd=package_dir
     )
     processes.append(backend_proc)
     
-    # Wait a moment for backend to start
-    time.sleep(2)
-    
-    # Check if backend started successfully
-    if backend_proc.poll() is not None:
-        print(f"{Colors.RED}✗ Backend failed to start{Colors.NC}")
+    # Wait for backend to actually start listening
+    if not wait_for_server('127.0.0.1', args.backend_port, timeout=30, process=backend_proc):
+        print(f"{Colors.RED}✗ Backend failed to start (timeout or crash){Colors.NC}")
+        if backend_proc.poll() is not None:
+            print(f"  Process exited with code: {backend_proc.returncode}")
         cleanup()
     
     print(f"{Colors.GREEN}✓ Backend running on http://localhost:{args.backend_port}{Colors.NC}")
@@ -193,10 +216,7 @@ uvicorn.run(app, host="{args.host}", port={args.backend_port}, log_level="warnin
         processes.append(frontend_proc)
         
         # Wait for frontend to start
-        time.sleep(3)
-        
-        # Check if frontend started
-        if frontend_proc.poll() is not None:
+        if not wait_for_server('127.0.0.1', args.frontend_port, timeout=30, process=frontend_proc):
             print(f"{Colors.RED}✗ Frontend failed to start{Colors.NC}")
             cleanup()
         

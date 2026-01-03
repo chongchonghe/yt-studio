@@ -127,16 +127,31 @@ class QuokkaDataset:
     
     @property
     def fields(self) -> List[Tuple[str, str]]:
-        """Get list of available fields (both native and derived)."""
+        """Get list of available mesh fields (both native and derived).
+        
+        This filters out N-body particle fields which cannot be used with
+        SlicePlot/ProjectionPlot. Only mesh/grid fields are returned.
+        """
         combined = list(self.ds.field_list) + list(self.ds.derived_field_list)
         unique = []
         seen = set()
+        
+        # Get particle types to filter them out
+        particle_types = set(self.ds.particle_types)
         
         for field_entry in combined:
             if not isinstance(field_entry, (tuple, list)) or len(field_entry) < 2:
                 continue
             namespace = str(field_entry[0]).strip()
             name = str(field_entry[1]).strip()
+            
+            # Skip N-body particle fields (they can't be used with SlicePlot)
+            # Particle type names typically end with "_particles" or are in particle_types
+            if namespace in particle_types:
+                continue
+            if namespace.endswith('_particles'):
+                continue
+            
             key = (namespace, name)
             if key not in seen:
                 seen.add(key)
