@@ -1,0 +1,23 @@
+# Include the README and license
+include README.md
+include LICENSE
+include requirements.txt
+
+# Include backend
+recursive-include backend *.py
+
+# Include frontend source files
+recursive-include frontend *.html *.js *.jsx *.ts *.tsx *.css *.json
+include frontend/vite.config.js
+include frontend/package.json
+include frontend/package-lock.json
+
+# Exclude compiled files and caches
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.so
+global-exclude .DS_Store
+global-exclude node_modules
+prune frontend/node_modules
+prune **/__pycache__
+prune output

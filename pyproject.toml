@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yt-studio"
+version = "2.0.0"
+description = "A visualization tool for QUOKKA simulation data"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "QUOKKA Team"}
+]
+keywords = ["astronomy", "visualization", "simulation", "quokka", "amr"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+    "yt>=4.0.0",
+    "unyt>=2.9.0",
+    "numpy>=1.20.0",
+    "matplotlib>=3.5.0",
+    "PyYAML>=5.0",
+    "fastapi>=0.68.0",
+    "uvicorn>=0.15.0",
+    "python-multipart>=0.0.5",
+    "pydantic>=1.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "black",
+    "flake8",
+]
+
+[project.scripts]
+yt-studio = "yt_studio.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/chongchonghe/yt-studio.git"
+
+[tool.setuptools]
+packages = ["plot_quokka", "yt_studio"]
+
+[tool.setuptools.package-data]
+"*" = ["*.py", "*.html", "*.js", "*.jsx", "*.css", "*.json"]
