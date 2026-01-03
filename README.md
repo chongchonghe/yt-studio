@@ -2,6 +2,8 @@
 
 A visualization tool for [QUOKKA](https://github.com/quokka-astro/quokka) simulation data with both a web interface and Python API.
 
+![screenshot](media/screenshot.jpg)
+
 ## Installation
 
 ### Prerequisites
