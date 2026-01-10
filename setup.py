@@ -27,26 +27,26 @@ setup(
     url="https://github.com/chongchonghe/yt-studio",
     license="MIT",
     
-    # Packages to include
-    packages=find_packages(include=["plot_quokka", "plot_quokka.*", "yt_studio", "yt_studio.*", "backend"]),
-    
-    # Include backend and frontend as package data
-    package_data={
-        "": [
-            "backend/*.py",
-            "frontend/**/*",
-        ],
-    },
-    
-    # Include non-Python files from the project root
-    data_files=[
-        ("yt_studio_data", [
-            "backend/main.py",
-        ]),
-    ],
+    # Packages to include (now backend and frontend are proper packages)
+    packages=find_packages(include=[
+        "plot_quokka", "plot_quokka.*", 
+        "yt_studio", "yt_studio.*",
+        "backend", "backend.*",
+        "frontend", "frontend.*"
+    ]),
     
     # Include everything in MANIFEST.in
     include_package_data=True,
+    
+    # Include all files in backend and frontend packages
+    package_data={
+        "backend": ["*.py"],
+        "frontend": [
+            "*.html", "*.js", "*.jsx", "*.css", "*.json", 
+            "vite.config.js", "package.json", "package-lock.json",
+            "src/*", "src/**/*",
+        ],
+    },
     
     # Python version requirement
     python_requires=">=3.9",

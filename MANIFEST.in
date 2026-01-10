@@ -7,7 +7,7 @@ include requirements.txt
 recursive-include backend *.py
 
 # Include frontend source files
-recursive-include frontend *.html *.js *.jsx *.ts *.tsx *.css *.json
+recursive-include frontend *.py *.html *.js *.jsx *.ts *.tsx *.css *.json
 include frontend/vite.config.js
 include frontend/package.json
 include frontend/package-lock.json

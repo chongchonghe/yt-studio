@@ -1,1 +1,1 @@
-"""Backend module for yt-studio."""
+"""Backend package for yt-studio."""

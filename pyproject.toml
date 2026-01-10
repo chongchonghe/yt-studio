@@ -52,7 +52,9 @@ yt-studio = "yt_studio.cli:main"
 Homepage = "https://github.com/chongchonghe/yt-studio.git"
 
 [tool.setuptools]
-packages = ["plot_quokka", "yt_studio", "backend"]
+packages = ["plot_quokka", "yt_studio", "backend", "frontend"]
 
 [tool.setuptools.package-data]
-"*" = ["*.py", "*.html", "*.js", "*.jsx", "*.css", "*.json"]
+"*" = ["*.py", "*.html", "*.js", "*.jsx", "*.css", "*.json", "*.ts", "*.tsx"]
+backend = ["*.py"]
+frontend = ["*.html", "*.js", "*.jsx", "*.css", "*.json", "vite.config.js", "package.json", "package-lock.json", "src/*"]
