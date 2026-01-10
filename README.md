@@ -110,3 +110,32 @@ plotter.slice("z", "density", params=params, output="custom_slice.png")
 ## License
 
 MIT License
+
+## Known issues
+
+1. In the first run, you may get this error:
+```
+❯ yt-studio
+╔════════════════════════════════════════════╗
+║         yt-studio Visualization Tool       ║
+╚════════════════════════════════════════════╝
+
+Installing frontend dependencies...
+✓ Frontend dependencies installed
+Starting backend server...
+✗ Backend failed to start (timeout or crash)
+
+Shutting down servers...
+✓ All servers stopped
+```
+The error should disappear the second time you run it. 
+
+2. On macOS with M3/M4 chips, this error has been reported:
+```
+ValueError: ewah_bool_utils.ewah_bool_wrap.SparseUnorderedBitmaskSet size changed, may indicate binary incompatibility. Expected 72 from C header, got 48 from PyObject
+```
+The solution is to rebuild `ewah_bool_utils` before installing yt-studio:
+```sh
+pip install --no-binary ewah_bool_utils -e .
+```
+
