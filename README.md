@@ -76,6 +76,44 @@ To run the app on a remote server and access it from your local computer:
 
 The SSH tunnel forwards traffic from your local ports to the server, allowing you to access the web interface as if it were running locally.
 
+### Running Backend on Server and Frontend Locally
+
+For a more responsive UI, you can run only the backend on the server and the frontend on your local machine. This is also useful when the server (e.g. OLCF Frontier) does not have Node.js installed.
+
+1. **On the server**, start only the backend:
+   ```bash
+   yt-studio --backend-only
+   ```
+   This runs the API server on port 9010 without starting the frontend.
+
+2. **On your local computer**, create an SSH tunnel for the backend port:
+   ```bash
+   ssh -L 9010:localhost:9010 user@server
+   ```
+   You can add this into your `~/.ssh/config` file and run `ssh fr-yt` for convenience.
+   ```
+   Host fr-yt
+   HostName andes-login1.olcf.ornl.gov
+   User USERNAME
+   LocalForward 9010 localhost:9010
+   SessionType none
+   ```
+
+3. **On your local computer**, clone the repo and start the frontend:
+   ```bash
+   git clone https://github.com/chongchonghe/yt-studio.git
+   cd yt-studio/frontend
+   npm install
+   npm run dev
+   ```
+
+4. **Open your browser** and navigate to:
+   ```
+   http://localhost:5173
+   ```
+
+This works because the frontend's Vite dev server proxies all `/api` requests to `localhost:9010`, which the SSH tunnel forwards to the remote backend. This setup provides faster frontend interactions since only API calls go through the tunnel.
+
 ### Python API
 
 ```python
