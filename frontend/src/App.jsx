@@ -429,7 +429,7 @@ function App() {
                 value={cmap} 
                 onChange={e => setCmap(e.target.value)}
               >
-                {['viridis', 'plasma', 'inferno', 'magma', 'cividis', 'hot', 'jet', 'gray'].map(c => (
+                {['viridis', 'plasma', 'inferno', 'magma', 'cividis', 'hot', 'jet', 'seismic', 'RdBu'].map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
