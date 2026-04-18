@@ -363,7 +363,7 @@ class QuokkaPlotter:
         
         # Timestamp
         if params.annotations.show_timestamp:
-            plot.annotate_timestamp(corner='upper_left')
+            plot.annotate_timestamp(corner='upper_left', time_format='t = {time:.6f} {units}')
         
         # Scale bar
         axis_info = self._dataset.get_axis_info(axis)
